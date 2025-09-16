@@ -5,6 +5,8 @@ import { insertProjectSchema, insertFileSchema, insertAIConversationSchema } fro
 import { fileSystemService } from "./services/fileSystem";
 import { pythonExecutor } from "./services/pythonExecutor";
 import { summarizeArticle, analyzeSentiment, generateCode, fixCodeErrors, optimizeCode, chatWithAI, chatWithAIStream } from "./services/gemini";
+import { actionProcessor } from "./services/actionProcessor";
+import { ActionResponse, QuickActions } from "@shared/actions";
 import multer from "multer";
 import { Server as SocketIOServer } from "socket.io";
 
@@ -370,6 +372,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('AI chat error:', error);
       res.status(500).json({ error: "Failed to get AI response" });
     }
+  });
+
+  // AI Action System
+  app.post("/api/ai/parse-request", async (req, res) => {
+    try {
+      const { message, context } = req.body;
+      const result = await actionProcessor.parseUserRequest(message, context);
+      res.json(result);
+    } catch (error) {
+      console.error('Error parsing request:', error);
+      res.status(500).json({ error: "Failed to parse request" });
+    }
+  });
+
+  app.post("/api/ai/execute-action", async (req, res) => {
+    try {
+      const { action, userId } = req.body;
+      const result = await actionProcessor.executeAction(action, userId);
+      // Parse the result to apply defaults before sending
+      const normalizedResult = ActionResponse.parse(result);
+      res.json(normalizedResult);
+    } catch (error) {
+      console.error('Error executing action:', error);
+      res.status(500).json({ error: "Failed to execute action" });
+    }
+  });
+
+  app.post("/api/ai/confirm-action", async (req, res) => {
+    try {
+      const { actionId, confirmed } = req.body;
+      const result = await actionProcessor.confirmAction(actionId, confirmed);
+      // Parse the result to apply defaults before sending  
+      const normalizedResult = ActionResponse.parse(result);
+      res.json(normalizedResult);
+    } catch (error) {
+      console.error('Error confirming action:', error);
+      res.status(500).json({ error: "Failed to confirm action" });
+    }
+  });
+
+  app.get("/api/ai/quick-actions", (req, res) => {
+    res.json(QuickActions);
   });
 
   return httpServer;
