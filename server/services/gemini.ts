@@ -233,6 +233,58 @@ Current file content (first 500 chars): ${context.fileContent.substring(0, 500)}
   }
 }
 
+// Streaming version of chatWithAI for real-time responses
+export async function* chatWithAIStream(message: string, context?: {
+  projectType?: string;
+  currentFile?: string;
+  fileContent?: string;
+  previousMessages?: Array<{role: 'user' | 'assistant', content: string}>;
+}): AsyncGenerator<string, void, unknown> {
+  try {
+    let systemPrompt = `You are an AI coding assistant specialized in web development, mobile app development, and programming. You help developers with:
+
+- Code generation and improvement
+- Debugging and error fixing
+- Best practices and optimization
+- Architecture and design decisions
+- Learning programming concepts
+- Troubleshooting technical issues
+
+Be helpful, concise, and provide actionable advice. When showing code examples, make them practical and relevant to the user's context.`;
+
+    if (context?.projectType) {
+      systemPrompt += `\n\nCurrent project type: ${context.projectType}`;
+    }
+
+    if (context?.currentFile && context?.fileContent) {
+      systemPrompt += `\n\nUser is currently working on: ${context.currentFile}
+Current file content (first 500 chars): ${context.fileContent.substring(0, 500)}`;
+    }
+
+    let conversationHistory = '';
+    if (context?.previousMessages && context.previousMessages.length > 0) {
+      conversationHistory = '\n\nRecent conversation:\n' + 
+        context.previousMessages.slice(-4).map(msg => 
+          `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
+        ).join('\n');
+    }
+
+    const fullPrompt = systemPrompt + conversationHistory + `\n\nUser: ${message}`;
+
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContentStream(fullPrompt);
+
+    for await (const chunk of result.stream) {
+      const chunkText = chunk.text();
+      if (chunkText) {
+        yield chunkText;
+      }
+    }
+  } catch (error) {
+    throw new Error(`Failed to get AI response: ${error}`);
+  }
+}
+
 // Legacy functions for compatibility with existing routes
 export async function summarizeArticle(text: string): Promise<string> {
   return chatWithAI(text);

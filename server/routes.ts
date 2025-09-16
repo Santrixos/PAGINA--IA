@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { insertProjectSchema, insertFileSchema, insertAIConversationSchema } from "@shared/schema";
 import { fileSystemService } from "./services/fileSystem";
 import { pythonExecutor } from "./services/pythonExecutor";
-import { summarizeArticle, analyzeSentiment } from "./services/gemini";
+import { summarizeArticle, analyzeSentiment, generateCode, fixCodeErrors, optimizeCode, chatWithAI, chatWithAIStream } from "./services/gemini";
 import multer from "multer";
 import { Server as SocketIOServer } from "socket.io";
 
@@ -49,6 +49,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     socket.on('python-command', (command: string) => {
       pythonExecutor.sendCommand(command);
+    });
+
+    // AI Streaming Chat
+    socket.on('ai-chat-stream', async (data: { 
+      message: string, 
+      conversationId?: string, 
+      context?: any 
+    }) => {
+      try {
+        const { message, conversationId, context } = data;
+        
+        // Load conversation history if conversationId is provided
+        let previousMessages: Array<{role: 'user' | 'assistant', content: string}> = [];
+        if (conversationId) {
+          const conversation = await storage.getConversation(conversationId);
+          if (conversation && conversation.messages) {
+            previousMessages = conversation.messages;
+          }
+        }
+        
+        // Include conversation history in context
+        const enhancedContext = {
+          ...context,
+          previousMessages
+        };
+        
+        // Start streaming response
+        socket.emit('ai-chat-start');
+        let fullResponse = '';
+        
+        for await (const chunk of chatWithAIStream(message, enhancedContext)) {
+          fullResponse += chunk;
+          socket.emit('ai-chat-chunk', { chunk });
+        }
+        
+        // Update conversation if provided
+        if (conversationId) {
+          const conversation = await storage.getConversation(conversationId);
+          if (conversation) {
+            const updatedMessages = [
+              ...(conversation.messages || []),
+              { role: 'user' as const, content: message },
+              { role: 'assistant' as const, content: fullResponse }
+            ];
+            await storage.updateConversation(conversationId, { messages: updatedMessages });
+          }
+        }
+        
+        socket.emit('ai-chat-end', { fullResponse });
+      } catch (error) {
+        console.error('AI streaming error:', error);
+        socket.emit('ai-chat-error', { error: 'Failed to get AI response' });
+      }
     });
 
     socket.on('disconnect', () => {
@@ -215,16 +268,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/generate-code", async (req, res) => {
     try {
       const { prompt, language, context } = req.body;
-      
-      const aiPrompt = `Generate ${language} code based on this request: ${prompt}
-      
-      ${context ? `Context: ${context}` : ''}
-      
-      Please provide clean, working code with comments explaining key parts.`;
-      
-      const generatedCode = await summarizeArticle(aiPrompt);
+      const generatedCode = await generateCode(prompt, language, context);
       res.json({ code: generatedCode });
     } catch (error) {
+      console.error('AI generate code error:', error);
       res.status(500).json({ error: "Failed to generate code with AI" });
     }
   });
@@ -232,17 +279,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/fix-errors", async (req, res) => {
     try {
       const { code, error, language } = req.body;
-      
-      const aiPrompt = `Fix the following ${language} code that has this error: ${error}
-      
-      Code:
-      ${code}
-      
-      Please provide the corrected code with explanation of what was wrong.`;
-      
-      const fixedCode = await summarizeArticle(aiPrompt);
+      const fixedCode = await fixCodeErrors(code, error, language);
       res.json({ fixedCode });
     } catch (error) {
+      console.error('AI fix errors error:', error);
       res.status(500).json({ error: "Failed to fix errors with AI" });
     }
   });
@@ -250,16 +290,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/optimize-code", async (req, res) => {
     try {
       const { code, language } = req.body;
-      
-      const aiPrompt = `Optimize and improve the following ${language} code for better performance, readability, and best practices:
-      
-      ${code}
-      
-      Please provide the optimized code with comments explaining the improvements.`;
-      
-      const optimizedCode = await summarizeArticle(aiPrompt);
+      const optimizedCode = await optimizeCode(code, language);
       res.json({ optimizedCode });
     } catch (error) {
+      console.error('AI optimize code error:', error);
       res.status(500).json({ error: "Failed to optimize code with AI" });
     }
   });
@@ -301,14 +335,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { message, conversationId, context } = req.body;
       
-      let systemPrompt = "You are an AI coding assistant specialized in web development, mobile app development, and programming. Help users with code generation, debugging, optimization, and answering programming questions.";
-      
-      if (context) {
-        systemPrompt += ` Context about the current project: ${JSON.stringify(context)}`;
+      // Load conversation history if conversationId is provided
+      let previousMessages: Array<{role: 'user' | 'assistant', content: string}> = [];
+      if (conversationId) {
+        const conversation = await storage.getConversation(conversationId);
+        if (conversation && conversation.messages) {
+          previousMessages = conversation.messages;
+        }
       }
       
-      const fullPrompt = `${systemPrompt}\n\nUser: ${message}`;
-      const response = await summarizeArticle(fullPrompt);
+      // Include conversation history in context
+      const enhancedContext = {
+        ...context,
+        previousMessages
+      };
+      
+      const response = await chatWithAI(message, enhancedContext);
       
       // Update conversation if provided
       if (conversationId) {
@@ -325,6 +367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ response });
     } catch (error) {
+      console.error('AI chat error:', error);
       res.status(500).json({ error: "Failed to get AI response" });
     }
   });
