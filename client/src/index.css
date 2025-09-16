@@ -1,0 +1,338 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(210 11% 9%);
+  --foreground: hsl(210 11% 95%);
+  --card: hsl(210 11% 11%);
+  --card-foreground: hsl(210 11% 95%);
+  --popover: hsl(210 11% 9%);
+  --popover-foreground: hsl(210 11% 95%);
+  --primary: hsl(199 89% 48%);
+  --primary-foreground: hsl(210 11% 9%);
+  --secondary: hsl(210 11% 15%);
+  --secondary-foreground: hsl(210 11% 85%);
+  --muted: hsl(210 11% 13%);
+  --muted-foreground: hsl(210 11% 65%);
+  --accent: hsl(142 71% 45%);
+  --accent-foreground: hsl(210 11% 9%);
+  --destructive: hsl(0 62% 56%);
+  --destructive-foreground: hsl(210 11% 95%);
+  --border: hsl(210 11% 18%);
+  --input: hsl(210 11% 15%);
+  --ring: hsl(199 89% 48%);
+  --chart-1: hsl(199 89% 48%);
+  --chart-2: hsl(142 71% 45%);
+  --chart-3: hsl(42 93% 56%);
+  --chart-4: hsl(147 79% 42%);
+  --chart-5: hsl(341 75% 51%);
+  --sidebar: hsl(210 11% 11%);
+  --sidebar-foreground: hsl(210 11% 95%);
+  --sidebar-primary: hsl(199 89% 48%);
+  --sidebar-primary-foreground: hsl(210 11% 9%);
+  --sidebar-accent: hsl(142 71% 45%);
+  --sidebar-accent-foreground: hsl(210 11% 9%);
+  --sidebar-border: hsl(210 11% 18%);
+  --sidebar-ring: hsl(199 89% 48%);
+  --font-sans: Inter, var(--font-sans);
+  --font-mono: JetBrains Mono, var(--font-mono);
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: hsl(210 11% 9%);
+  --foreground: hsl(210 11% 95%);
+  --card: hsl(210 11% 11%);
+  --card-foreground: hsl(210 11% 95%);
+  --popover: hsl(210 11% 9%);
+  --popover-foreground: hsl(210 11% 95%);
+  --primary: hsl(199 89% 48%);
+  --primary-foreground: hsl(210 11% 9%);
+  --secondary: hsl(210 11% 15%);
+  --secondary-foreground: hsl(210 11% 85%);
+  --muted: hsl(210 11% 13%);
+  --muted-foreground: hsl(210 11% 65%);
+  --accent: hsl(142 71% 45%);
+  --accent-foreground: hsl(210 11% 9%);
+  --destructive: hsl(0 62% 56%);
+  --destructive-foreground: hsl(210 11% 95%);
+  --border: hsl(210 11% 18%);
+  --input: hsl(210 11% 15%);
+  --ring: hsl(199 89% 48%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  html {
+    @apply dark;
+  }
+}
+
+/* Custom syntax highlighting for code editor */
+.syntax-keyword {
+  @apply text-purple-400;
+}
+
+.syntax-string {
+  @apply text-green-400;
+}
+
+.syntax-number {
+  @apply text-blue-400;
+}
+
+.syntax-comment {
+  @apply text-gray-500 italic;
+}
+
+.syntax-tag {
+  @apply text-red-400;
+}
+
+.syntax-attribute {
+  @apply text-yellow-400;
+}
+
+/* Terminal styles */
+.terminal-input {
+  @apply bg-transparent border-0 outline-none font-mono;
+}
+
+/* AI Chat animations */
+@keyframes pulse-dot {
+  0%, 20% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+/* Scrollbar styles for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-md;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary opacity-50;
+}
+
+/* Code editor specific styles */
+.code-editor {
+  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* File tree styles */
+.file-tree-item {
+  @apply transition-colors duration-150;
+}
+
+.file-tree-item:hover {
+  @apply bg-secondary/50;
+}
+
+.file-tree-item.selected {
+  @apply bg-secondary;
+}
+
+/* Preview panel styles */
+.preview-iframe {
+  @apply w-full h-full border-0 bg-white;
+}
+
+.device-preview {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.device-preview.mobile {
+  @apply max-w-sm mx-auto;
+}
+
+.device-preview.tablet {
+  @apply max-w-2xl mx-auto;
+}
+
+/* AI message styles */
+.ai-message {
+  @apply animate-in slide-in-from-left-2 duration-300;
+}
+
+.user-message {
+  @apply animate-in slide-in-from-right-2 duration-300;
+}
+
+/* Loading animations */
+.loading-dots {
+  @apply flex space-x-1;
+}
+
+.loading-dot {
+  @apply w-2 h-2 bg-accent rounded-full;
+  animation: loading-wave 1.4s ease-in-out infinite;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+@keyframes loading-wave {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Error/warning indicators */
+.error-indicator {
+  @apply absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full;
+}
+
+.warning-indicator {
+  @apply absolute top-1 right-1 w-2 h-2 bg-yellow-500 rounded-full;
+}
+
+/* Floating action button */
+.fab {
+  @apply fixed bottom-6 right-6 w-12 h-12 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 flex items-center justify-center transition-all duration-200 hover:scale-110;
+}
+
+.fab-menu {
+  @apply absolute bottom-14 right-0 bg-card border border-border rounded-lg shadow-xl py-2 min-w-48 transform transition-all duration-200 origin-bottom-right;
+}
+
+.fab-menu.closed {
+  @apply scale-0 opacity-0 pointer-events-none;
+}
+
+.fab-menu.open {
+  @apply scale-100 opacity-100;
+}
+
+/* Resizable panel styles */
+.resizable-handle {
+  @apply bg-border hover:bg-primary/50 transition-colors duration-150;
+}
+
+.resizable-handle:hover {
+  @apply bg-primary/30;
+}
+
+/* Tab styles */
+.editor-tab {
+  @apply flex items-center px-3 py-2 border-r border-border text-sm cursor-pointer transition-colors duration-150;
+}
+
+.editor-tab:hover {
+  @apply bg-secondary;
+}
+
+.editor-tab.active {
+  @apply bg-background;
+}
+
+.editor-tab .close-button {
+  @apply ml-2 h-4 w-4 p-0 hover:bg-secondary/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150;
+}
+
+.editor-tab:hover .close-button {
+  @apply opacity-100;
+}
+
+/* Toast notifications */
+.toast {
+  @apply bg-card border border-border text-card-foreground;
+}
+
+.toast.destructive {
+  @apply bg-destructive/10 border-destructive/20 text-destructive;
+}
+
+/* Focus styles for accessibility */
+.focus-visible:focus {
+  @apply ring-2 ring-primary ring-offset-2 ring-offset-background outline-none;
+}
+
+/* Custom selection colors */
+::selection {
+  @apply bg-primary/30 text-foreground;
+}
+
+::-moz-selection {
+  @apply bg-primary/30 text-foreground;
+}
+
+/* Drag and drop styles */
+.drag-over {
+  @apply border-2 border-dashed border-primary bg-primary/5;
+}
+
+.drag-active {
+  @apply border-accent bg-accent/5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .mobile-hidden {
+    @apply hidden;
+  }
+  
+  .mobile-full {
+    @apply w-full;
+  }
+  
+  .sidebar-mobile {
+    @apply w-full max-w-xs;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: hsl(210 11% 30%);
+    --muted: hsl(210 11% 20%);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
