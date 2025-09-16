@@ -15,6 +15,10 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
+localPort = 34413
+externalPort = 3001
+
+[[ports]]
 localPort = 41423
 externalPort = 3000
 
@@ -23,6 +27,7 @@ PORT = "5000"
 
 [agent]
 integrations = ["javascript_mem_db:1.0.0", "javascript_gemini:1.0.0"]
+expertMode = true
 
 [workflows]
 runButton = "Project"
