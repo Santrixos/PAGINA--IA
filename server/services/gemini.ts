@@ -1,9 +1,7 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// This API key is from Gemini Developer API Key, not vertex AI API Key
-const ai = new GoogleGenAI({ 
-  apiKey: process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "" 
-});
+// Initialize Gemini AI with the API key
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function generateCode(prompt: string, language: string, context?: string): Promise<string> {
   try {
@@ -26,12 +24,11 @@ export async function generateCode(prompt: string, language: string, context?: s
     
     Respond only with the code, no explanations outside of comments.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: systemPrompt,
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(systemPrompt);
+    const response = await result.response;
 
-    return response.text || "// Error: Unable to generate code";
+    return response.text() || "// Error: Unable to generate code";
   } catch (error) {
     throw new Error(`Failed to generate code: ${error}`);
   }
@@ -53,12 +50,11 @@ Please provide the corrected code with:
 
 Respond only with the corrected code.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
-      contents: systemPrompt,
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const result = await model.generateContent(systemPrompt);
+    const response = await result.response;
 
-    return response.text || code; // Return original if fixing fails
+    return response.text() || code; // Return original if fixing fails
   } catch (error) {
     throw new Error(`Failed to fix code errors: ${error}`);
   }
@@ -81,12 +77,11 @@ ${code}
 Provide the optimized version with comments explaining the improvements made.
 Respond only with the optimized code.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
-      contents: systemPrompt,
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const result = await model.generateContent(systemPrompt);
+    const response = await result.response;
 
-    return response.text || code; // Return original if optimization fails
+    return response.text() || code; // Return original if optimization fails
   } catch (error) {
     throw new Error(`Failed to optimize code: ${error}`);
   }
@@ -113,29 +108,20 @@ Provide a JSON array of issues found, each with:
 
 If no issues are found, return an empty array.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
-      config: {
-        systemInstruction: systemPrompt,
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-pro",
+      generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              line: { type: "number" },
-              type: { type: "string", enum: ["error", "warning"] },
-              message: { type: "string" },
-              suggestion: { type: "string" }
-            },
-            required: ["line", "type", "message", "suggestion"]
-          }
-        }
       },
-      contents: code,
     });
+    
+    const result = await model.generateContent([
+      { text: systemPrompt },
+      { text: code }
+    ]);
+    const response = await result.response;
 
-    const rawJson = response.text;
+    const rawJson = response.text();
     if (rawJson) {
       return JSON.parse(rawJson);
     }
@@ -176,36 +162,20 @@ For mobile projects, include:
 
 Make the project functional and complete.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
-      config: {
-        systemInstruction: systemPrompt,
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-pro",
+      generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: {
-          type: "object",
-          properties: {
-            files: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  path: { type: "string" },
-                  name: { type: "string" },
-                  content: { type: "string" },
-                  type: { type: "string" }
-                },
-                required: ["path", "name", "content", "type"]
-              }
-            },
-            description: { type: "string" }
-          },
-          required: ["files", "description"]
-        }
       },
-      contents: description,
     });
+    
+    const result = await model.generateContent([
+      { text: systemPrompt },
+      { text: description }
+    ]);
+    const response = await result.response;
 
-    const rawJson = response.text;
+    const rawJson = response.text();
     if (rawJson) {
       return JSON.parse(rawJson);
     }
@@ -253,12 +223,11 @@ Current file content (first 500 chars): ${context.fileContent.substring(0, 500)}
 
     const fullPrompt = systemPrompt + conversationHistory + `\n\nUser: ${message}`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: fullPrompt,
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
 
-    return response.text || "I'm sorry, I couldn't process your request. Please try again.";
+    return response.text() || "I'm sorry, I couldn't process your request. Please try again.";
   } catch (error) {
     throw new Error(`Failed to get AI response: ${error}`);
   }
@@ -282,24 +251,20 @@ from 1 to 5 stars and a confidence score between 0 and 1.
 Respond with JSON in this format: 
 {'rating': number, 'confidence': number}`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
-      config: {
-        systemInstruction: systemPrompt,
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-pro",
+      generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: {
-          type: "object",
-          properties: {
-            rating: { type: "number" },
-            confidence: { type: "number" },
-          },
-          required: ["rating", "confidence"],
-        },
       },
-      contents: text,
     });
+    
+    const result = await model.generateContent([
+      { text: systemPrompt },
+      { text: text }
+    ]);
+    const response = await result.response;
 
-    const rawJson = response.text;
+    const rawJson = response.text();
 
     if (rawJson) {
       const data: Sentiment = JSON.parse(rawJson);

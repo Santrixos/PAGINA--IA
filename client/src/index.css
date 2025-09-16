@@ -157,7 +157,7 @@
 }
 
 .file-tree-item:hover {
-  @apply bg-secondary/50;
+  @apply bg-secondary opacity-50;
 }
 
 .file-tree-item.selected {
@@ -228,7 +228,7 @@
 
 /* Floating action button */
 .fab {
-  @apply fixed bottom-6 right-6 w-12 h-12 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 flex items-center justify-center transition-all duration-200 hover:scale-110;
+  @apply fixed bottom-6 right-6 w-12 h-12 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary hover:opacity-90 flex items-center justify-center transition-all duration-200 hover:scale-110;
 }
 
 .fab-menu {
@@ -245,11 +245,11 @@
 
 /* Resizable panel styles */
 .resizable-handle {
-  @apply bg-border hover:bg-primary/50 transition-colors duration-150;
+  @apply bg-border hover:bg-primary hover:opacity-50 transition-colors duration-150;
 }
 
 .resizable-handle:hover {
-  @apply bg-primary/30;
+  @apply bg-primary opacity-30;
 }
 
 /* Tab styles */
@@ -266,7 +266,7 @@
 }
 
 .editor-tab .close-button {
-  @apply ml-2 h-4 w-4 p-0 hover:bg-secondary/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150;
+  @apply ml-2 h-4 w-4 p-0 hover:bg-secondary hover:opacity-80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150;
 }
 
 .editor-tab:hover .close-button {
@@ -279,7 +279,7 @@
 }
 
 .toast.destructive {
-  @apply bg-destructive/10 border-destructive/20 text-destructive;
+  @apply bg-destructive opacity-10 border-destructive text-destructive;
 }
 
 /* Focus styles for accessibility */
@@ -289,20 +289,20 @@
 
 /* Custom selection colors */
 ::selection {
-  @apply bg-primary/30 text-foreground;
+  @apply bg-primary opacity-30 text-foreground;
 }
 
 ::-moz-selection {
-  @apply bg-primary/30 text-foreground;
+  @apply bg-primary opacity-30 text-foreground;
 }
 
 /* Drag and drop styles */
 .drag-over {
-  @apply border-2 border-dashed border-primary bg-primary/5;
+  @apply border-2 border-dashed border-primary bg-primary opacity-5;
 }
 
 .drag-active {
-  @apply border-accent bg-accent/5;
+  @apply border-accent bg-accent opacity-5;
 }
 
 /* Responsive adjustments */
